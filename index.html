@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Flying Aryan - Flappy Bird Game</title>
     <style>
         * {
@@ -10,6 +10,12 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
         
         body {
@@ -17,22 +23,28 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(to bottom, #000000, #1a1a2e, #16213e);
-            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            overflow: hidden;
         }
         
         .game-container {
             position: relative;
-            width: 320px;
-            height: 480px;
+            width: 100%;
+            max-width: 400px;
+            height: 80vh;
+            min-height: 600px;
             overflow: hidden;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(255, 69, 0, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: #000;
         }
         
         canvas {
-            background: linear-gradient(to bottom, #000000, #1a1a2e);
+            background: linear-gradient(to bottom, #000428, #004e92);
             display: block;
+            width: 100%;
+            height: 100%;
         }
         
         .screen {
@@ -45,99 +57,102 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: rgba(0, 0, 0, 0.85);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 78, 146, 0.8));
             color: white;
             text-align: center;
             z-index: 10;
-            padding: 20px;
+            padding: 30px 20px;
         }
         
         #game-over {
             display: none;
         }
         
-        h1 {
-            font-size: 28px;
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
             margin-bottom: 10px;
             color: #FFD700;
-            text-shadow: 0 0 10px #ff8a00, 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 20px #ff8a00;
+            background: linear-gradient(45deg, #FFD700, #FF8A00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
-        h2 {
-            font-size: 24px;
-            margin-bottom: 20px;
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #ffffff;
+            opacity: 0.9;
         }
         
-        p {
-            margin-bottom: 20px;
-            font-size: 16px;
-            max-width: 80%;
+        .game-over-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #FF4500;
+            text-shadow: 0 0 15px #ff8a00;
         }
         
         button {
-            padding: 12px 24px;
-            font-size: 18px;
-            background: linear-gradient(to bottom, #ff8a00, #e52e71);
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, #FF8A00, #E52E71);
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(255, 69, 0, 0.4);
+            min-height: 60px;
+            min-width: 180px;
         }
         
-        button:hover {
-            transform: scale(1.05);
-            background: linear-gradient(to bottom, #e52e71, #ff8a00);
-            box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6);
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 15px rgba(255, 69, 0, 0.6);
         }
         
         #score {
             position: absolute;
-            top: 20px;
+            top: 30px;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 40px;
+            font-size: 3.5rem;
             font-weight: bold;
             color: #FFD700;
-            text-shadow: 0 0 10px #ff8a00, 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 15px #ff8a00;
             z-index: 5;
         }
         
         .instructions {
             position: absolute;
-            bottom: 20px;
+            bottom: 25px;
             left: 0;
             width: 100%;
             text-align: center;
             color: white;
-            font-size: 14px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            font-size: 1rem;
+            opacity: 0.8;
+            padding: 0 20px;
         }
         
         .credits {
             position: absolute;
-            bottom: 5px;
-            right: 10px;
+            bottom: 10px;
+            right: 15px;
             color: white;
-            font-size: 12px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
-        
-        .game-over-text {
-            font-size: 32px;
-            color: #FF4500;
-            font-weight: bold;
-            margin: 10px 0;
-            text-shadow: 0 0 15px #ff8a00, 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: 0.8rem;
+            opacity: 0.7;
         }
         
         .fire-emoji {
-            font-size: 40px;
-            margin: 5px 0;
+            font-size: 3rem;
+            margin: 10px 0;
             animation: pulse 1s infinite;
         }
         
@@ -148,64 +163,161 @@
         }
         
         .aryan-image {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            border: 3px solid #FFD700;
-            box-shadow: 0 0 20px #ff8a00;
-            margin-bottom: 15px;
+            border: 4px solid #FFD700;
+            box-shadow: 0 0 30px #ff8a00;
+            margin-bottom: 20px;
             object-fit: cover;
         }
         
-        .image-status {
-            margin: 10px 0;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
+        .headphone-warning {
+            background: linear-gradient(45deg, #FF8A00, #E52E71);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(255, 69, 0, 0.4);
+            border: 2px solid #FFD700;
         }
         
-        .loading {
-            background: rgba(255, 215, 0, 0.3);
+        .headphone-warning p {
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+        }
+        
+        .headphone-emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .difficulty-indicator {
+            position: absolute;
+            top: 100px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
             color: #FFD700;
+            text-shadow: 0 0 10px #ff8a00;
+            z-index: 5;
+            display: none;
+        }
+
+        .audio-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            color: #FFD700;
+            font-size: 0.8rem;
+            z-index: 5;
+            backdrop-filter: blur(10px);
+            border: 1px solid #FFD700;
         }
         
-        .success {
-            background: rgba(0, 255, 0, 0.3);
-            color: #90EE90;
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            .game-container {
+                height: 85vh;
+                min-height: 500px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            button {
+                padding: 12px 25px;
+                font-size: 1.1rem;
+                min-height: 55px;
+                min-width: 160px;
+            }
+            
+            .aryan-image {
+                width: 100px;
+                height: 100px;
+            }
+            
+            #score {
+                font-size: 3rem;
+                top: 20px;
+            }
         }
         
-        .error {
-            background: rgba(255, 0, 0, 0.3);
-            color: #FF6B6B;
+        @media (max-height: 700px) {
+            .game-container {
+                height: 90vh;
+                min-height: 400px;
+            }
+            
+            .title {
+                font-size: 1.8rem;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 1rem;
+                min-height: 50px;
+                min-width: 140px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <canvas id="game-canvas" width="320" height="480"></canvas>
+        <canvas id="game-canvas"></canvas>
         
         <div id="score">0</div>
+        <div id="difficulty" class="difficulty-indicator">Difficulty: Normal</div>
+        <div id="audio-status" class="audio-status">🔇 Click to enable audio</div>
         
         <div id="start" class="screen">
-            <h1>Flying Aryan</h1>
-            <p>Navigate through the fire pillars!</p>
-            <p>Tap or click to make him flap.</p>
-            <button id="start-button">Start Game</button>
-            <div id="image-status" class="image-status loading">Loading Aryan's image...</div>
+            <div class="title">Flying Aryan</div>
+            <div class="subtitle">Dodge the fire pillars and fly high!</div>
+            
+            <div class="headphone-warning">
+                <div class="headphone-emoji">🎧</div>
+                <p>For best experience, use headphones!</p>
+                <p style="font-size: 0.8rem; margin-top: 5px;">Click anywhere to enable audio</p>
+            </div>
+            
+            <button id="start-button">Start Flying</button>
             <div class="credits">Made by Shivam</div>
         </div>
         
         <div id="game-over" class="screen">
-            <img id="game-over-image" class="aryan-image" src="https://i.postimg.cc/B6YWYG15/aryan.jpg" alt="Aryan">
-            <div class="game-over-text">MKB Aag</div>
+            <img class="aryan-image" src="https://i.postimg.cc/B6YWYG15/aryan.jpg" alt="Aryan">
+            <div class="game-over-title">MKB Aag</div>
             <div class="fire-emoji">🔥</div>
             <p id="final-score">Your score: 0</p>
-            <button id="restart-button">Try Again</button>
+            <button id="restart-button">Fly Again</button>
             <div class="credits">Made by Shivam</div>
         </div>
         
-        <div class="instructions">Tap or Click to Flap!</div>
+        <div class="instructions">Tap anywhere to flap!</div>
     </div>
+
+    <!-- Audio elements for local files -->
+    <audio id="bg-music" loop>
+        <source src="audio1.mp3" type="audio/mpeg">
+        <source src="audio1.ogg" type="audio/ogg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="game-over-sound">
+        <source src="audio2.mp3" type="audio/mpeg">
+        <source src="audio2.ogg" type="audio/ogg">
+        Your browser does not support the audio element.
+    </audio>
 
     <script>
         // Game variables
@@ -217,111 +329,138 @@
         const finalScoreDisplay = document.getElementById('final-score');
         const startButton = document.getElementById('start-button');
         const restartButton = document.getElementById('restart-button');
-        const imageStatus = document.getElementById('image-status');
-        const gameOverImage = document.getElementById('game-over-image');
+        const difficultyIndicator = document.getElementById('difficulty');
+        const audioStatus = document.getElementById('audio-status');
+        const bgMusic = document.getElementById('bg-music');
+        const gameOverSound = document.getElementById('game-over-sound');
+        
+        // Game objects
+        let bird = null;
+        let firePillars = null;
+        let background = null;
         
         // Game state
         let gameRunning = false;
         let score = 0;
         let gameStarted = false;
-        let aryanImgLoaded = false;
+        let frames = 0;
+        let difficultyLevel = 1;
+        let audioEnabled = false;
         
-        // Load Aryan image
-        const aryanImg = new Image();
-        aryanImg.crossOrigin = "anonymous";
-        aryanImg.src = 'https://i.postimg.cc/B6YWYG15/aryan.jpg';
-        
-        aryanImg.onload = function() {
-            aryanImgLoaded = true;
-            imageStatus.textContent = "Aryan's image loaded!";
-            imageStatus.className = "image-status success";
-        };
-        
-        aryanImg.onerror = function() {
-            imageStatus.textContent = "Using placeholder (image failed to load)";
-            imageStatus.className = "image-status error";
-        };
-
-        // Load game over Aryan image
-        gameOverImage.onload = function() {
-            console.log("Game over image loaded successfully!");
-        };
-        
-        gameOverImage.onerror = function() {
-            console.log("Game over image failed to load");
-        };
-        
-        // Load fire animation
-        const fireImg = new Image();
-        fireImg.src = 'https://media.tenor.com/DGv3i4GdRpgAAAAM/up-in-flames-fire.gif';
-        
-        // Sound effects using Web Audio API
+        // Audio context for sound effects
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
-        function playFlapSound() {
+        // Sound functions using Web Audio API (fallback sounds)
+        function createOscillator(frequency, duration, type = 'sine') {
+            if (!audioEnabled) return;
+            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.value = 350;
-            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
             
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
             
             oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.15);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function playFlapSound() {
+            createOscillator(400, 0.1, 'sine');
         }
         
         function playScoreSound() {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 900;
-            oscillator.type = 'triangle';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
+            createOscillator(800, 0.3, 'triangle');
         }
         
+        // Enable audio and start background music
+        function enableAudio() {
+            if (!audioEnabled) {
+                audioEnabled = true;
+                // Resume audio context if it was suspended
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                audioStatus.textContent = "🔊 Audio Enabled";
+                audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
+                
+                // Try to play background music
+                try {
+                    bgMusic.volume = 0.7;
+                    bgMusic.play().then(() => {
+                        console.log("Background music started successfully");
+                    }).catch(error => {
+                        console.log("Background music failed:", error);
+                        // Fallback: use oscillator for background beeps
+                        startFallbackBackgroundMusic();
+                    });
+                } catch (error) {
+                    console.log("Audio error:", error);
+                    startFallbackBackgroundMusic();
+                }
+            }
+        }
+        
+        // Fallback background music using oscillators
+        function startFallbackBackgroundMusic() {
+            if (!audioEnabled) return;
+            
+            // Simple background beep pattern
+            setInterval(() => {
+                if (audioEnabled && gameRunning) {
+                    createOscillator(523, 0.1, 'sine'); // C5 note
+                }
+            }, 2000);
+        }
+        
+        // Play game over sound
         function playGameOverSound() {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+            if (!audioEnabled) return;
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.6);
-            oscillator.type = 'sawtooth';
-            
-            gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.6);
+            try {
+                gameOverSound.volume = 0.8;
+                gameOverSound.play().catch(error => {
+                    console.log("Game over sound failed:", error);
+                    // Fallback: use oscillator for game over sound
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.8);
+                    oscillator.type = 'sawtooth';
+                    
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.8);
+                });
+            } catch (error) {
+                console.log("Game over audio error:", error);
+            }
         }
         
-        // Bird properties
-        const bird = {
-            x: 50,
-            y: canvas.height / 2,
-            width: 35,
-            height: 35,
-            gravity: 0.25,
-            lift: -4.5,
-            velocity: 0,
-            
-            draw: function() {
-                if (aryanImgLoaded && aryanImg.complete && aryanImg.naturalWidth !== 0) {
+        // Initialize game objects
+        function initGameObjects() {
+            // Bird properties
+            bird = {
+                x: 50,
+                y: canvas.height / 2,
+                width: Math.min(35, canvas.width * 0.08),
+                height: Math.min(35, canvas.width * 0.08),
+                gravity: 0.18,
+                lift: -3.8,
+                velocity: 0,
+                
+                draw: function() {
                     try {
                         // Create a circular clipping path for the image
                         ctx.save();
@@ -344,223 +483,246 @@
                     } catch (e) {
                         this.drawPlaceholder();
                     }
-                } else {
-                    this.drawPlaceholder();
-                }
-            },
-            
-            drawPlaceholder: function() {
-                // Draw placeholder with glow
-                ctx.shadowColor = '#FFD700';
-                ctx.shadowBlur = 20;
-                ctx.fillStyle = '#FFD700';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.width/2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
+                },
                 
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('A', this.x, this.y);
-            },
-            
-            update: function() {
-                this.velocity += this.gravity;
-                this.y += this.velocity;
-                
-                // Ceiling collision only (no ground)
-                if (this.y - this.height/2 <= 0) {
-                    this.y = this.height/2;
-                    this.velocity = 0;
-                }
-                
-                // Bottom of screen (no ground collision)
-                if (this.y + this.height/2 >= canvas.height) {
-                    this.y = canvas.height - this.height/2;
-                    this.velocity = 0;
-                }
-            },
-            
-            flap: function() {
-                this.velocity = this.lift;
-                playFlapSound();
-            }
-        };
-        
-        // Fire Pillars
-        const firePillars = {
-            position: [],
-            gap: 160,
-            minYPos: 60,
-            maxYPos: 280,
-            width: 60,
-            speed: 2,
-            
-            draw: function() {
-                for (let i = 0; i < this.position.length; i++) {
-                    let p = this.position[i];
+                drawPlaceholder: function() {
+                    // Draw placeholder with glow
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 20;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
                     
-                    // Ensure pillars don't go below visible area
-                    let topHeight = Math.max(20, p.top);
-                    let bottomStart = Math.min(canvas.height - 20, p.top + this.gap);
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('A', this.x, this.y);
+                },
+                
+                update: function() {
+                    this.velocity += this.gravity;
+                    this.y += this.velocity;
                     
-                    // Draw fire animation for top pillar
-                    if (fireImg.complete) {
-                        // Top fire pillar
-                        ctx.drawImage(fireImg, p.x, 0, this.width, topHeight);
-                        
-                        // Bottom fire pillar (flipped)
-                        ctx.save();
-                        ctx.translate(p.x + this.width/2, bottomStart + (canvas.height - bottomStart)/2);
-                        ctx.scale(1, -1);
-                        ctx.drawImage(fireImg, -this.width/2, -(canvas.height - bottomStart)/2, this.width, canvas.height - bottomStart);
-                        ctx.restore();
-                    } else {
-                        // Fallback fire gradient
-                        let gradient = ctx.createLinearGradient(p.x, 0, p.x + this.width, 0);
-                        gradient.addColorStop(0, '#ff8a00');
-                        gradient.addColorStop(0.3, '#e52e71');
-                        gradient.addColorStop(0.7, '#ff2070');
-                        gradient.addColorStop(1, '#ff8a00');
-                        
-                        ctx.fillStyle = gradient;
-                        ctx.fillRect(p.x, 0, this.width, topHeight);
-                        ctx.fillRect(p.x, bottomStart, this.width, canvas.height - bottomStart);
+                    // Ceiling collision
+                    if (this.y - this.height/2 <= 0) {
+                        this.y = this.height/2;
+                        this.velocity = 0;
                     }
                     
-                    // Add fire particle effects
-                    this.drawFireParticles(p.x, topHeight - 5, this.width);
-                    this.drawFireParticles(p.x, bottomStart, this.width);
+                    // Bottom of screen
+                    if (this.y + this.height/2 >= canvas.height) {
+                        this.y = canvas.height - this.height/2;
+                        this.velocity = 0;
+                    }
+                },
+                
+                flap: function() {
+                    this.velocity = this.lift;
+                    if (audioEnabled) playFlapSound();
                 }
-            },
+            };
             
-            drawFireParticles: function(x, y, width) {
-                // Draw animated fire particles
-                ctx.fillStyle = '#ff8a00';
-                for (let i = 0; i < 8; i++) {
-                    let particleX = x + Math.random() * width;
-                    let particleY = y - Math.random() * 15;
-                    let size = Math.random() * 3 + 1;
-                    
-                    ctx.beginPath();
-                    ctx.arc(particleX, particleY, size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            },
-            
-            update: function() {
-                if (gameRunning) {
-                    // Add new fire pillars with better positioning
-                    if (frames % 120 === 0) {
-                        let topPos = Math.floor(Math.random() * (this.maxYPos - this.minYPos)) + this.minYPos;
-                        // Ensure bottom pillar doesn't go below screen
-                        if (topPos + this.gap > canvas.height - 50) {
-                            topPos = canvas.height - 50 - this.gap;
+            // Fire Pillars with difficulty settings
+            firePillars = {
+                position: [],
+                baseGap: 180,
+                baseSpeed: 1.3,
+                minYPos: 100,
+                maxYPos: canvas.height - 200,
+                width: Math.min(50, canvas.width * 0.12),
+                
+                get gap() {
+                    // Reduce gap as difficulty increases
+                    return Math.max(120, this.baseGap - (difficultyLevel * 15));
+                },
+                
+                get speed() {
+                    // Increase speed as difficulty increases
+                    return Math.min(3.5, this.baseSpeed + (difficultyLevel * 0.2));
+                },
+                
+                draw: function() {
+                    for (let i = 0; i < this.position.length; i++) {
+                        let p = this.position[i];
+                        
+                        let topHeight = Math.max(30, p.top);
+                        let bottomStart = Math.min(canvas.height - 30, p.top + this.gap);
+                        
+                        // Draw fire animation
+                        if (fireImg.complete) {
+                            ctx.drawImage(fireImg, p.x, 0, this.width, topHeight);
+                            
+                            ctx.save();
+                            ctx.translate(p.x + this.width/2, bottomStart + (canvas.height - bottomStart)/2);
+                            ctx.scale(1, -1);
+                            ctx.drawImage(fireImg, -this.width/2, -(canvas.height - bottomStart)/2, this.width, canvas.height - bottomStart);
+                            ctx.restore();
+                        } else {
+                            let gradient = ctx.createLinearGradient(p.x, 0, p.x + this.width, 0);
+                            gradient.addColorStop(0, '#ff8a00');
+                            gradient.addColorStop(0.3, '#e52e71');
+                            gradient.addColorStop(0.7, '#ff2070');
+                            gradient.addColorStop(1, '#ff8a00');
+                            
+                            ctx.fillStyle = gradient;
+                            ctx.fillRect(p.x, 0, this.width, topHeight);
+                            ctx.fillRect(p.x, bottomStart, this.width, canvas.height - bottomStart);
+                        }
+                    }
+                },
+                
+                update: function() {
+                    if (gameRunning) {
+                        // Adjust pillar frequency based on difficulty
+                        const frequency = Math.max(60, 180 - (difficultyLevel * 20));
+                        
+                        if (frames % frequency === 0) {
+                            let topPos = Math.floor(Math.random() * (this.maxYPos - this.minYPos)) + this.minYPos;
+                            if (topPos + this.gap > canvas.height - 50) {
+                                topPos = canvas.height - 50 - this.gap;
+                            }
+                            
+                            this.position.push({
+                                x: canvas.width,
+                                top: topPos,
+                                scored: false
+                            });
                         }
                         
-                        this.position.push({
-                            x: canvas.width,
-                            top: topPos,
-                            scored: false
+                        // Move fire pillars
+                        for (let i = 0; i < this.position.length; i++) {
+                            let p = this.position[i];
+                            p.x -= this.speed;
+                            
+                            // Check for score
+                            if (p.x + this.width < bird.x && !p.scored) {
+                                score++;
+                                scoreDisplay.textContent = score;
+                                p.scored = true;
+                                if (audioEnabled) playScoreSound();
+                                
+                                // Increase difficulty every 10 points
+                                if (score % 10 === 0) {
+                                    difficultyLevel = Math.min(5, Math.floor(score / 10) + 1);
+                                    updateDifficultyIndicator();
+                                }
+                            }
+                            
+                            // Accurate collision detection
+                            let birdLeft = bird.x - bird.width/2;
+                            let birdRight = bird.x + bird.width/2;
+                            let birdTop = bird.y - bird.height/2;
+                            let birdBottom = bird.y + bird.height/2;
+                            
+                            let pillarRight = p.x + this.width;
+                            let topPillarBottom = p.top;
+                            let bottomPillarTop = p.top + this.gap;
+                            
+                            if (birdRight > p.x && birdLeft < pillarRight) {
+                                if (birdTop < topPillarBottom || birdBottom > bottomPillarTop) {
+                                    gameOver();
+                                }
+                            }
+                            
+                            // Remove off-screen pillars
+                            if (p.x + this.width < 0) {
+                                this.position.shift();
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // Background elements
+            background = {
+                particles: [],
+                
+                draw: function() {
+                    let gradient = ctx.createRadialGradient(
+                        canvas.width/2, canvas.height/2, 0,
+                        canvas.width/2, canvas.height/2, canvas.width
+                    );
+                    gradient.addColorStop(0, '#000428');
+                    gradient.addColorStop(1, '#004e92');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw stars
+                    ctx.fillStyle = 'white';
+                    for (let i = 0; i < this.particles.length; i++) {
+                        let particle = this.particles[i];
+                        ctx.globalAlpha = particle.alpha;
+                        ctx.fillRect(particle.x, particle.y, 2, 2);
+                    }
+                    ctx.globalAlpha = 1;
+                },
+                
+                update: function() {
+                    if (Math.random() < 0.1) {
+                        this.particles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            alpha: Math.random() * 0.8 + 0.2
                         });
                     }
                     
-                    // Move fire pillars
-                    for (let i = 0; i < this.position.length; i++) {
-                        let p = this.position[i];
-                        p.x -= this.speed;
-                        
-                        // Check for score
-                        if (p.x + this.width < bird.x && !p.scored) {
-                            score++;
-                            scoreDisplay.textContent = score;
-                            p.scored = true;
-                            playScoreSound();
-                        }
-                        
-                        // Accurate collision detection
-                        let birdLeft = bird.x - bird.width/2;
-                        let birdRight = bird.x + bird.width/2;
-                        let birdTop = bird.y - bird.height/2;
-                        let birdBottom = bird.y + bird.height/2;
-                        
-                        let pillarRight = p.x + this.width;
-                        let topPillarBottom = p.top;
-                        let bottomPillarTop = p.top + this.gap;
-                        
-                        // Check if bird overlaps with pillar horizontally
-                        if (birdRight > p.x && birdLeft < pillarRight) {
-                            // Check if bird touches top pillar or bottom pillar
-                            if (birdTop < topPillarBottom || birdBottom > bottomPillarTop) {
-                                gameOver();
-                            }
-                        }
-                        
-                        // Remove fire pillars that are off screen
-                        if (p.x + this.width < 0) {
-                            this.position.shift();
-                        }
+                    if (this.particles.length > 40) {
+                        this.particles.shift();
                     }
                 }
-            }
-        };
+            };
+        }
         
-        // Background elements
-        const background = {
-            particles: [],
+        // Update difficulty indicator
+        function updateDifficultyIndicator() {
+            const levels = ['Normal', 'Hard', 'Expert', 'Insane', 'IMPOSSIBLE'];
+            difficultyIndicator.textContent = `Difficulty: ${levels[difficultyLevel - 1]}`;
+            difficultyIndicator.style.display = 'block';
             
-            draw: function() {
-                // Dark space background
-                let gradient = ctx.createRadialGradient(
-                    canvas.width/2, canvas.height/2, 0,
-                    canvas.width/2, canvas.height/2, canvas.width
-                );
-                gradient.addColorStop(0, '#000000');
-                gradient.addColorStop(0.7, '#1a1a2e');
-                gradient.addColorStop(1, '#16213e');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw stars/particles
-                ctx.fillStyle = 'white';
-                for (let i = 0; i < this.particles.length; i++) {
-                    let particle = this.particles[i];
-                    ctx.globalAlpha = particle.alpha;
-                    ctx.fillRect(particle.x, particle.y, 1, 1);
-                }
-                ctx.globalAlpha = 1;
-            },
-            
-            update: function() {
-                // Add new particles
-                if (Math.random() < 0.1) {
-                    this.particles.push({
-                        x: Math.random() * canvas.width,
-                        y: Math.random() * canvas.height,
-                        alpha: Math.random() * 0.8 + 0.2
-                    });
-                }
-                
-                // Limit particles
-                if (this.particles.length > 50) {
-                    this.particles.shift();
-                }
-            }
-        };
+            // Flash effect for difficulty change
+            difficultyIndicator.style.animation = 'none';
+            setTimeout(() => {
+                difficultyIndicator.style.animation = 'pulse 0.5s 3';
+            }, 10);
+        }
         
-        let frames = 0;
+        // Set canvas size based on container
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            if (bird && firePillars) {
+                bird.width = Math.min(35, canvas.width * 0.08);
+                bird.height = Math.min(35, canvas.width * 0.08);
+                firePillars.maxYPos = canvas.height - 200;
+            }
+        }
+        
+        // Load images
+        const aryanImg = new Image();
+        aryanImg.crossOrigin = "anonymous";
+        aryanImg.src = 'https://i.postimg.cc/B6YWYG15/aryan.jpg';
+        
+        const fireImg = new Image();
+        fireImg.src = 'https://media.tenor.com/DGv3i4GdRpgAAAAM/up-in-flames-fire.gif';
         
         // Game functions
         function draw() {
+            if (!background || !firePillars || !bird) return;
+            
             background.draw();
             firePillars.draw();
             bird.draw();
         }
         
         function update() {
+            if (!bird || !firePillars || !background) return;
+            
             bird.update();
             firePillars.update();
             background.update();
@@ -577,20 +739,35 @@
         }
         
         function startGame() {
+            // Reset game state
             gameRunning = true;
             gameStarted = true;
             score = 0;
+            frames = 0;
+            difficultyLevel = 1;
+            
             scoreDisplay.textContent = score;
+            difficultyIndicator.style.display = 'none';
+            
+            // Initialize game objects if not already done
+            if (!bird || !firePillars || !background) {
+                initGameObjects();
+            }
+            
+            // Reset positions
             bird.y = canvas.height / 2;
             bird.velocity = 0;
             firePillars.position = [];
             background.particles = [];
-            frames = 0;
             
+            // Update sizes
+            resizeCanvas();
+            
+            // Hide screens
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             
-            // Give the player a moment before starting
+            // Start game loop
             setTimeout(() => {
                 loop();
             }, 800);
@@ -600,31 +777,64 @@
             gameRunning = false;
             finalScoreDisplay.textContent = `Your score: ${score}`;
             gameOverScreen.style.display = 'flex';
+            
+            // Stop background music
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            
+            // Play game over sound
             playGameOverSound();
         }
         
         // Event listeners
-        startButton.addEventListener('click', startGame);
-        restartButton.addEventListener('click', startGame);
+        startButton.addEventListener('click', function() {
+            console.log("Start button clicked");
+            startGame();
+        });
         
-        // Flap on click/tap
-        canvas.addEventListener('click', function() {
-            if (gameRunning) {
+        restartButton.addEventListener('click', function() {
+            console.log("Restart button clicked");
+            startGame();
+        });
+        
+        // Enable audio and flap controls
+        function handleUserInteraction() {
+            enableAudio();
+            
+            if (gameRunning && bird) {
                 bird.flap();
             } else if (!gameStarted) {
                 startGame();
             }
-        });
+        }
         
-        // Flap on spacebar
+        // Click/tap to enable audio and flap
+        canvas.addEventListener('click', handleUserInteraction);
+        document.addEventListener('click', enableAudio);
+        
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            handleUserInteraction();
+        }, { passive: false });
+        
+        // Keyboard support
         document.addEventListener('keydown', function(e) {
-            if (e.code === 'Space' && gameRunning) {
-                bird.flap();
+            if (e.code === 'Space' && gameRunning && bird) {
+                handleUserInteraction();
+                e.preventDefault();
             }
         });
         
-        // Initial draw
-        draw();
+        // Initialize everything when page loads
+        window.addEventListener('load', function() {
+            resizeCanvas();
+            initGameObjects();
+            draw();
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', resizeCanvas);
     </script>
 </body>
 </html>
