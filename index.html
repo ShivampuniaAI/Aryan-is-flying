@@ -218,6 +218,7 @@
             z-index: 5;
             backdrop-filter: blur(10px);
             border: 1px solid #FFD700;
+            display: none; /* Hide audio status since audio starts automatically */
         }
         
         /* Mobile-specific optimizations */
@@ -278,7 +279,7 @@
         
         <div id="score">0</div>
         <div id="difficulty" class="difficulty-indicator">Difficulty: Normal</div>
-        <div id="audio-status" class="audio-status">🔇 Click to enable audio</div>
+        <div id="audio-status" class="audio-status">🔊 Audio Enabled</div>
         
         <div id="start" class="screen">
             <div class="title">Flying Aryan</div>
@@ -287,7 +288,7 @@
             <div class="headphone-warning">
                 <div class="headphone-emoji">🎧</div>
                 <p>For best experience, use headphones!</p>
-                <p style="font-size: 0.8rem; margin-top: 5px;">Click anywhere to enable audio</p>
+                <p style="font-size: 0.8rem; margin-top: 5px;">Background music starts automatically</p>
             </div>
             
             <button id="start-button">Start Flying</button>
@@ -345,7 +346,7 @@
         let gameStarted = false;
         let frames = 0;
         let difficultyLevel = 1;
-        let audioEnabled = false;
+        let audioEnabled = true; // Audio is always enabled now
         let backgroundMusicStarted = false;
         
         // Audio context for sound effects
@@ -476,19 +477,6 @@
             
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.8);
-        }
-        
-        // Enable audio
-        function enableAudio() {
-            if (!audioEnabled) {
-                audioEnabled = true;
-                // Resume audio context if it was suspended
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                audioStatus.textContent = "🔊 Audio Enabled";
-                audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
-            }
         }
         
         // Initialize game objects
@@ -810,10 +798,8 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             
-            // Start background music when game starts
-            if (audioEnabled) {
-                startBackgroundMusic();
-            }
+            // Start background music automatically when game starts
+            startBackgroundMusic();
             
             // Start game loop
             setTimeout(() => {
@@ -827,26 +813,22 @@
             gameOverScreen.style.display = 'flex';
             
             // Play game over sound and pause background music
-            if (audioEnabled) {
-                playGameOverSound();
-            }
+            playGameOverSound();
         }
         
         // Event listeners
         startButton.addEventListener('click', function() {
-            console.log("Start button clicked");
+            console.log("Start button clicked - starting game and audio");
             startGame();
         });
         
         restartButton.addEventListener('click', function() {
-            console.log("Restart button clicked");
+            console.log("Restart button clicked - restarting game and audio");
             startGame();
         });
         
-        // Enable audio and flap controls
-        function handleUserInteraction() {
-            enableAudio();
-            
+        // Flap controls
+        function handleFlap() {
             if (gameRunning && bird) {
                 bird.flap();
             } else if (!gameStarted) {
@@ -854,20 +836,19 @@
             }
         }
         
-        // Click/tap to enable audio and flap
-        canvas.addEventListener('click', handleUserInteraction);
-        document.addEventListener('click', enableAudio);
+        // Click/tap to flap
+        canvas.addEventListener('click', handleFlap);
         
         // Touch events for mobile
         canvas.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            handleUserInteraction();
+            handleFlap();
         }, { passive: false });
         
         // Keyboard support
         document.addEventListener('keydown', function(e) {
             if (e.code === 'Space' && gameRunning && bird) {
-                handleUserInteraction();
+                handleFlap();
                 e.preventDefault();
             }
         });
@@ -877,6 +858,13 @@
             resizeCanvas();
             initGameObjects();
             draw();
+            
+            // Auto-resume audio context on any user interaction
+            document.addEventListener('click', function() {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }, { once: true });
         });
         
         // Handle window resize
