@@ -306,19 +306,6 @@
         <div class="instructions">Tap anywhere to flap!</div>
     </div>
 
-    <!-- Audio elements for local files -->
-    <audio id="bg-music" loop>
-        <source src="audio1.mp3" type="audio/mpeg">
-        <source src="audio1.ogg" type="audio/ogg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <audio id="game-over-sound">
-        <source src="audio2.mp3" type="audio/mpeg">
-        <source src="audio2.ogg" type="audio/ogg">
-        Your browser does not support the audio element.
-    </audio>
-
     <script>
         // Game variables
         const canvas = document.getElementById('game-canvas');
@@ -331,8 +318,6 @@
         const restartButton = document.getElementById('restart-button');
         const difficultyIndicator = document.getElementById('difficulty');
         const audioStatus = document.getElementById('audio-status');
-        const bgMusic = document.getElementById('bg-music');
-        const gameOverSound = document.getElementById('game-over-sound');
         
         // Game objects
         let bird = null;
@@ -345,25 +330,74 @@
         let gameStarted = false;
         let frames = 0;
         let difficultyLevel = 1;
-        let audioEnabled = true; // Audio is always enabled
         let backgroundMusicStarted = false;
 
-        // Start background music automatically when page loads
-        function startBackgroundMusicOnLoad() {
-            console.log("Starting background music automatically...");
+        // Audio elements - created dynamically
+        let bgMusic = null;
+        let gameOverSound = null;
+
+        // Initialize audio system
+        function initializeAudio() {
+            console.log("Initializing audio system...");
             
-            // Set audio properties
-            bgMusic.volume = 0.7;
+            // Create audio elements
+            bgMusic = new Audio('audio1.mp3');
+            gameOverSound = new Audio('audio2.mp3');
+            
+            // Configure background music
             bgMusic.loop = true;
+            bgMusic.volume = 0.7;
             
-            // Try to play immediately
-            bgMusic.play().then(() => {
-                console.log("Background music started successfully on page load");
+            // Configure game over sound
+            gameOverSound.volume = 0.8;
+            
+            // Set up audio event listeners
+            bgMusic.addEventListener('canplaythrough', function() {
+                console.log("Background music loaded and ready to play");
+                startBackgroundMusic();
+            });
+            
+            bgMusic.addEventListener('error', function(e) {
+                console.log("Background music error:", e);
+                audioStatus.textContent = "🔇 Music Error";
+                audioStatus.style.background = "rgba(255, 0, 0, 0.3)";
+            });
+            
+            gameOverSound.addEventListener('error', function(e) {
+                console.log("Game over sound error:", e);
+            });
+            
+            // Load the audio files
+            bgMusic.load();
+            gameOverSound.load();
+        }
+
+        // Start background music with user interaction workaround
+        function startBackgroundMusic() {
+            if (backgroundMusicStarted) return;
+            
+            console.log("Attempting to start background music...");
+            
+            // Create a silent audio context to unlock audio
+            const silentAudio = new Audio();
+            silentAudio.src = 'data:audio/wav;base64,UklGRnoAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoAAAC';
+            silentAudio.volume = 0.001;
+            
+            // Play silent audio to unlock audio context
+            silentAudio.play().then(() => {
+                console.log("Audio context unlocked with silent audio");
+                
+                // Now try to play the actual background music
+                return bgMusic.play();
+            }).then(() => {
+                console.log("Background music started successfully!");
                 backgroundMusicStarted = true;
                 audioStatus.textContent = "🔊 Music Playing";
+                audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
             }).catch(error => {
                 console.log("Auto-play failed, will retry on user interaction:", error);
-                audioStatus.textContent = "🔇 Click to start music";
+                audioStatus.textContent = "🔇 Click to start";
+                audioStatus.style.background = "rgba(255, 165, 0, 0.3)";
                 
                 // Set up retry on any user interaction
                 const retryAudio = () => {
@@ -371,22 +405,56 @@
                         console.log("Background music started after user interaction");
                         backgroundMusicStarted = true;
                         audioStatus.textContent = "🔊 Music Playing";
+                        audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
                     }).catch(e => {
                         console.log("Retry also failed:", e);
+                        audioStatus.textContent = "🔇 Audio Blocked";
+                        audioStatus.style.background = "rgba(255, 0, 0, 0.3)";
                     });
-                    document.removeEventListener('click', retryAudio);
-                    document.removeEventListener('touchstart', retryAudio);
                 };
                 
+                // Add event listeners for user interaction
                 document.addEventListener('click', retryAudio, { once: true });
                 document.addEventListener('touchstart', retryAudio, { once: true });
+                document.addEventListener('keydown', retryAudio, { once: true });
             });
         }
+
+        // Pause background music
+        function pauseBackgroundMusic() {
+            if (backgroundMusicStarted && bgMusic) {
+                bgMusic.pause();
+                console.log("Background music paused");
+            }
+        }
+
+        // Resume background music
+        function resumeBackgroundMusic() {
+            if (backgroundMusicStarted && bgMusic) {
+                bgMusic.play().catch(error => {
+                    console.log("Failed to resume background music:", error);
+                });
+            }
+        }
+
+        // Play game over sound
+        function playGameOverSound() {
+            if (gameOverSound) {
+                // Pause background music first
+                pauseBackgroundMusic();
+                
+                // Play game over sound
+                gameOverSound.currentTime = 0;
+                gameOverSound.play().catch(error => {
+                    console.log("Game over sound failed:", error);
+                });
+            }
+        }
+
+        // Sound effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Sound functions using Web Audio API (fallback sounds)
         function createOscillator(frequency, duration, type = 'sine') {
-            if (!audioEnabled) return;
-            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
@@ -409,71 +477,6 @@
         
         function playScoreSound() {
             createOscillator(800, 0.3, 'triangle');
-        }
-        
-        // Pause background music
-        function pauseBackgroundMusic() {
-            if (backgroundMusicStarted) {
-                bgMusic.pause();
-                console.log("Background music paused");
-            }
-        }
-        
-        // Resume background music
-        function resumeBackgroundMusic() {
-            if (!audioEnabled || !backgroundMusicStarted) return;
-            
-            try {
-                bgMusic.play().then(() => {
-                    console.log("Background music resumed");
-                }).catch(error => {
-                    console.log("Background music resume failed:", error);
-                });
-            } catch (error) {
-                console.log("Audio resume error:", error);
-            }
-        }
-        
-        // Play game over sound and pause background music
-        function playGameOverSound() {
-            if (!audioEnabled) return;
-            
-            // Pause background music first
-            pauseBackgroundMusic();
-            
-            try {
-                gameOverSound.volume = 0.8;
-                gameOverSound.currentTime = 0; // Start from beginning
-                gameOverSound.play().then(() => {
-                    console.log("Game over sound playing");
-                }).catch(error => {
-                    console.log("Game over sound failed:", error);
-                    // Fallback: use oscillator for game over sound
-                    playFallbackGameOverSound();
-                });
-            } catch (error) {
-                console.log("Game over audio error:", error);
-                playFallbackGameOverSound();
-            }
-        }
-        
-        // Fallback game over sound
-        function playFallbackGameOverSound() {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.8);
-            oscillator.type = 'sawtooth';
-            
-            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.8);
         }
         
         // Initialize game objects
@@ -549,7 +552,7 @@
                 
                 flap: function() {
                     this.velocity = this.lift;
-                    if (audioEnabled) playFlapSound();
+                    playFlapSound();
                 }
             };
             
@@ -630,7 +633,7 @@
                                 score++;
                                 scoreDisplay.textContent = score;
                                 p.scored = true;
-                                if (audioEnabled) playScoreSound();
+                                playScoreSound();
                                 
                                 // Increase difficulty every 10 points
                                 if (score % 10 === 0) {
@@ -796,9 +799,7 @@
             gameOverScreen.style.display = 'none';
             
             // Resume background music when game starts
-            if (backgroundMusicStarted) {
-                resumeBackgroundMusic();
-            }
+            resumeBackgroundMusic();
             
             // Start game loop
             setTimeout(() => {
@@ -858,8 +859,8 @@
             initGameObjects();
             draw();
             
-            // Start background music automatically when page loads
-            startBackgroundMusicOnLoad();
+            // Initialize audio system
+            initializeAudio();
         });
         
         // Handle window resize
