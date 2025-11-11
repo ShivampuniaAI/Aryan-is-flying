@@ -346,6 +346,7 @@
         let frames = 0;
         let difficultyLevel = 1;
         let audioEnabled = false;
+        let backgroundMusicStarted = false;
         
         // Audio context for sound effects
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -378,31 +379,39 @@
             createOscillator(800, 0.3, 'triangle');
         }
         
-        // Enable audio and start background music
-        function enableAudio() {
-            if (!audioEnabled) {
-                audioEnabled = true;
-                // Resume audio context if it was suspended
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                audioStatus.textContent = "🔊 Audio Enabled";
-                audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
-                
-                // Try to play background music
-                try {
-                    bgMusic.volume = 0.7;
-                    bgMusic.play().then(() => {
-                        console.log("Background music started successfully");
-                    }).catch(error => {
-                        console.log("Background music failed:", error);
-                        // Fallback: use oscillator for background beeps
-                        startFallbackBackgroundMusic();
-                    });
-                } catch (error) {
-                    console.log("Audio error:", error);
+        // Start background music - plays continuously
+        function startBackgroundMusic() {
+            if (!audioEnabled || backgroundMusicStarted) return;
+            
+            try {
+                bgMusic.volume = 0.7;
+                bgMusic.loop = true;
+                bgMusic.play().then(() => {
+                    console.log("Background music started successfully");
+                    backgroundMusicStarted = true;
+                }).catch(error => {
+                    console.log("Background music failed:", error);
+                    // Fallback: use oscillator for background beeps
                     startFallbackBackgroundMusic();
-                }
+                });
+            } catch (error) {
+                console.log("Audio error:", error);
+                startFallbackBackgroundMusic();
+            }
+        }
+        
+        // Resume background music after game over
+        function resumeBackgroundMusic() {
+            if (!audioEnabled || !backgroundMusicStarted) return;
+            
+            try {
+                bgMusic.play().then(() => {
+                    console.log("Background music resumed");
+                }).catch(error => {
+                    console.log("Background music resume failed:", error);
+                });
+            } catch (error) {
+                console.log("Audio resume error:", error);
             }
         }
         
@@ -412,7 +421,7 @@
             
             // Simple background beep pattern
             setInterval(() => {
-                if (audioEnabled && gameRunning) {
+                if (audioEnabled) {
                     createOscillator(523, 0.1, 'sine'); // C5 note
                 }
             }, 2000);
@@ -445,6 +454,22 @@
                 });
             } catch (error) {
                 console.log("Game over audio error:", error);
+            }
+        }
+        
+        // Enable audio and start background music
+        function enableAudio() {
+            if (!audioEnabled) {
+                audioEnabled = true;
+                // Resume audio context if it was suspended
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                audioStatus.textContent = "🔊 Audio Enabled";
+                audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
+                
+                // Start background music immediately when audio is enabled
+                startBackgroundMusic();
             }
         }
         
@@ -767,6 +792,11 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             
+            // Resume background music when game starts
+            if (audioEnabled && backgroundMusicStarted) {
+                resumeBackgroundMusic();
+            }
+            
             // Start game loop
             setTimeout(() => {
                 loop();
@@ -778,12 +808,11 @@
             finalScoreDisplay.textContent = `Your score: ${score}`;
             gameOverScreen.style.display = 'flex';
             
-            // Stop background music
-            bgMusic.pause();
-            bgMusic.currentTime = 0;
-            
-            // Play game over sound
+            // Play game over sound (background music continues)
             playGameOverSound();
+            
+            // Background music continues playing - DO NOT STOP IT
+            // This ensures audio1.mp3 plays continuously
         }
         
         // Event listeners
