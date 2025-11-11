@@ -379,13 +379,14 @@
             createOscillator(800, 0.3, 'triangle');
         }
         
-        // Start background music - plays continuously
+        // Start background music - plays during gameplay
         function startBackgroundMusic() {
-            if (!audioEnabled || backgroundMusicStarted) return;
+            if (!audioEnabled) return;
             
             try {
                 bgMusic.volume = 0.7;
                 bgMusic.loop = true;
+                bgMusic.currentTime = 0; // Start from beginning
                 bgMusic.play().then(() => {
                     console.log("Background music started successfully");
                     backgroundMusicStarted = true;
@@ -400,7 +401,15 @@
             }
         }
         
-        // Resume background music after game over
+        // Pause background music
+        function pauseBackgroundMusic() {
+            if (backgroundMusicStarted) {
+                bgMusic.pause();
+                console.log("Background music paused");
+            }
+        }
+        
+        // Resume background music
         function resumeBackgroundMusic() {
             if (!audioEnabled || !backgroundMusicStarted) return;
             
@@ -421,43 +430,55 @@
             
             // Simple background beep pattern
             setInterval(() => {
-                if (audioEnabled) {
+                if (audioEnabled && gameRunning) {
                     createOscillator(523, 0.1, 'sine'); // C5 note
                 }
             }, 2000);
         }
         
-        // Play game over sound
+        // Play game over sound and pause background music
         function playGameOverSound() {
             if (!audioEnabled) return;
             
+            // Pause background music first
+            pauseBackgroundMusic();
+            
             try {
                 gameOverSound.volume = 0.8;
-                gameOverSound.play().catch(error => {
+                gameOverSound.currentTime = 0; // Start from beginning
+                gameOverSound.play().then(() => {
+                    console.log("Game over sound playing");
+                }).catch(error => {
                     console.log("Game over sound failed:", error);
                     // Fallback: use oscillator for game over sound
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-                    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.8);
-                    oscillator.type = 'sawtooth';
-                    
-                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
-                    
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.8);
+                    playFallbackGameOverSound();
                 });
             } catch (error) {
                 console.log("Game over audio error:", error);
+                playFallbackGameOverSound();
             }
         }
         
-        // Enable audio and start background music
+        // Fallback game over sound
+        function playFallbackGameOverSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.8);
+            oscillator.type = 'sawtooth';
+            
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.8);
+        }
+        
+        // Enable audio
         function enableAudio() {
             if (!audioEnabled) {
                 audioEnabled = true;
@@ -467,9 +488,6 @@
                 }
                 audioStatus.textContent = "🔊 Audio Enabled";
                 audioStatus.style.background = "rgba(0, 255, 0, 0.3)";
-                
-                // Start background music immediately when audio is enabled
-                startBackgroundMusic();
             }
         }
         
@@ -792,9 +810,9 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             
-            // Resume background music when game starts
-            if (audioEnabled && backgroundMusicStarted) {
-                resumeBackgroundMusic();
+            // Start background music when game starts
+            if (audioEnabled) {
+                startBackgroundMusic();
             }
             
             // Start game loop
@@ -808,11 +826,10 @@
             finalScoreDisplay.textContent = `Your score: ${score}`;
             gameOverScreen.style.display = 'flex';
             
-            // Play game over sound (background music continues)
-            playGameOverSound();
-            
-            // Background music continues playing - DO NOT STOP IT
-            // This ensures audio1.mp3 plays continuously
+            // Play game over sound and pause background music
+            if (audioEnabled) {
+                playGameOverSound();
+            }
         }
         
         // Event listeners
