@@ -193,19 +193,6 @@
             margin-bottom: 10px;
         }
         
-        .difficulty-indicator {
-            position: absolute;
-            top: 100px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 1rem;
-            color: #FFD700;
-            text-shadow: 0 0 10px #ff8a00;
-            z-index: 5;
-            display: none;
-        }
-
         .audio-status {
             position: absolute;
             top: 20px;
@@ -218,6 +205,49 @@
             z-index: 5;
             backdrop-filter: blur(10px);
             border: 1px solid #FFD700;
+        }
+
+        .achievement-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #FF8A00, #E52E71);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+            z-index: 20;
+            display: none;
+            animation: achievementSlide 3s ease-in-out;
+        }
+
+        @keyframes achievementSlide {
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -100%);
+            }
+            20% { 
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            80% { 
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            100% { 
+                opacity: 0;
+                transform: translate(-50%, 0%);
+            }
+        }
+
+        .achievement-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
         }
         
         /* Mobile-specific optimizations */
@@ -251,6 +281,11 @@
                 font-size: 3rem;
                 top: 20px;
             }
+
+            .achievement-popup {
+                font-size: 1.2rem;
+                padding: 15px 20px;
+            }
         }
         
         @media (max-height: 700px) {
@@ -277,8 +312,13 @@
         <canvas id="game-canvas"></canvas>
         
         <div id="score">0</div>
-        <div id="difficulty" class="difficulty-indicator">Difficulty: Normal</div>
         <div id="audio-status" class="audio-status">🔊 Music Playing</div>
+        
+        <!-- Achievement Popup -->
+        <div id="achievement-popup" class="achievement-popup">
+            <div class="achievement-emoji">🏆</div>
+            <div>New Achievement Unlocked!</div>
+        </div>
         
         <div id="start" class="screen">
             <div class="title">Flying Aryan</div>
@@ -287,7 +327,7 @@
             <div class="headphone-warning">
                 <div class="headphone-emoji">🎧</div>
                 <p>Background music is playing automatically!</p>
-                <p style="font-size: 0.8rem; margin-top: 5px;">Click Start Flying to begin</p>
+                <p style="font-size: 0.8rem; margin-top: 5px;">Earn achievements every 50 points!</p>
             </div>
             
             <button id="start-button">Start Flying</button>
@@ -316,8 +356,8 @@
         const finalScoreDisplay = document.getElementById('final-score');
         const startButton = document.getElementById('start-button');
         const restartButton = document.getElementById('restart-button');
-        const difficultyIndicator = document.getElementById('difficulty');
         const audioStatus = document.getElementById('audio-status');
+        const achievementPopup = document.getElementById('achievement-popup');
         
         // Game objects
         let bird = null;
@@ -329,12 +369,14 @@
         let score = 0;
         let gameStarted = false;
         let frames = 0;
-        let difficultyLevel = 1;
         let backgroundMusicStarted = false;
+        let lastAchievementScore = 0;
 
         // Audio elements - created dynamically
         let bgMusic = null;
         let gameOverSound = null;
+        let achievementSound1 = null;
+        let achievementSound2 = null;
 
         // Initialize audio system
         function initializeAudio() {
@@ -343,13 +385,17 @@
             // Create audio elements
             bgMusic = new Audio('audio1.mp3');
             gameOverSound = new Audio('audio2.mp3');
+            achievementSound1 = new Audio('audio3.mp3');
+            achievementSound2 = new Audio('audio4.mp3');
             
             // Configure background music
             bgMusic.loop = true;
             bgMusic.volume = 0.7;
             
-            // Configure game over sound
+            // Configure other sounds
             gameOverSound.volume = 0.8;
+            achievementSound1.volume = 0.8;
+            achievementSound2.volume = 0.8;
             
             // Set up audio event listeners
             bgMusic.addEventListener('canplaythrough', function() {
@@ -363,13 +409,11 @@
                 audioStatus.style.background = "rgba(255, 0, 0, 0.3)";
             });
             
-            gameOverSound.addEventListener('error', function(e) {
-                console.log("Game over sound error:", e);
-            });
-            
             // Load the audio files
             bgMusic.load();
             gameOverSound.load();
+            achievementSound1.load();
+            achievementSound2.load();
         }
 
         // Start background music with user interaction workaround
@@ -448,6 +492,45 @@
                 gameOverSound.play().catch(error => {
                     console.log("Game over sound failed:", error);
                 });
+            }
+        }
+
+        // Play achievement sound and show popup
+        function playAchievement(score) {
+            if (!gameRunning) return;
+            
+            // Determine which sound to play based on score
+            const achievementSound = (Math.floor(score / 50) % 2 === 1) ? achievementSound1 : achievementSound2;
+            
+            // Play achievement sound
+            if (achievementSound) {
+                achievementSound.currentTime = 0;
+                achievementSound.play().catch(error => {
+                    console.log("Achievement sound failed:", error);
+                });
+            }
+            
+            // Show achievement popup
+            showAchievementPopup();
+            
+            console.log(`🎉 Achievement unlocked at ${score} points!`);
+        }
+
+        // Show achievement popup
+        function showAchievementPopup() {
+            achievementPopup.style.display = 'block';
+            
+            // Hide popup after animation completes
+            setTimeout(() => {
+                achievementPopup.style.display = 'none';
+            }, 3000);
+        }
+
+        // Check for achievements
+        function checkAchievements() {
+            if (score >= 50 && score !== lastAchievementScore && score % 50 === 0) {
+                lastAchievementScore = score;
+                playAchievement(score);
             }
         }
 
@@ -556,7 +639,7 @@
                 }
             };
             
-            // Fire Pillars with difficulty settings
+            // Fire Pillars with difficulty settings (hidden from player)
             firePillars = {
                 position: [],
                 baseGap: 180,
@@ -566,13 +649,13 @@
                 width: Math.min(50, canvas.width * 0.12),
                 
                 get gap() {
-                    // Reduce gap as difficulty increases
-                    return Math.max(120, this.baseGap - (difficultyLevel * 15));
+                    // Reduce gap as difficulty increases (hidden from player)
+                    return Math.max(120, this.baseGap - (Math.floor(score / 10) * 15));
                 },
                 
                 get speed() {
-                    // Increase speed as difficulty increases
-                    return Math.min(3.5, this.baseSpeed + (difficultyLevel * 0.2));
+                    // Increase speed as difficulty increases (hidden from player)
+                    return Math.min(3.5, this.baseSpeed + (Math.floor(score / 10) * 0.2));
                 },
                 
                 draw: function() {
@@ -607,8 +690,8 @@
                 
                 update: function() {
                     if (gameRunning) {
-                        // Adjust pillar frequency based on difficulty
-                        const frequency = Math.max(60, 180 - (difficultyLevel * 20));
+                        // Adjust pillar frequency based on difficulty (hidden from player)
+                        const frequency = Math.max(60, 180 - (Math.floor(score / 10) * 20));
                         
                         if (frames % frequency === 0) {
                             let topPos = Math.floor(Math.random() * (this.maxYPos - this.minYPos)) + this.minYPos;
@@ -635,11 +718,8 @@
                                 p.scored = true;
                                 playScoreSound();
                                 
-                                // Increase difficulty every 10 points
-                                if (score % 10 === 0) {
-                                    difficultyLevel = Math.min(5, Math.floor(score / 10) + 1);
-                                    updateDifficultyIndicator();
-                                }
+                                // Check for achievements
+                                checkAchievements();
                             }
                             
                             // Accurate collision detection
@@ -708,19 +788,6 @@
             };
         }
         
-        // Update difficulty indicator
-        function updateDifficultyIndicator() {
-            const levels = ['Normal', 'Hard', 'Expert', 'Insane', 'IMPOSSIBLE'];
-            difficultyIndicator.textContent = `Difficulty: ${levels[difficultyLevel - 1]}`;
-            difficultyIndicator.style.display = 'block';
-            
-            // Flash effect for difficulty change
-            difficultyIndicator.style.animation = 'none';
-            setTimeout(() => {
-                difficultyIndicator.style.animation = 'pulse 0.5s 3';
-            }, 10);
-        }
-        
         // Set canvas size based on container
         function resizeCanvas() {
             const container = canvas.parentElement;
@@ -775,10 +842,9 @@
             gameStarted = true;
             score = 0;
             frames = 0;
-            difficultyLevel = 1;
+            lastAchievementScore = 0;
             
             scoreDisplay.textContent = score;
-            difficultyIndicator.style.display = 'none';
             
             // Initialize game objects if not already done
             if (!bird || !firePillars || !background) {
